@@ -42,7 +42,8 @@ enum calcInst_t {
     JBE_CMD   =       16,
     JNE_CMD   =       17,
     JAE_CMD   =       18,
-    UNDEF_CMD =       19
+    UNDEF_CMD =       19,
+    IN_CMD    =       20,
 };
 
 struct line_format {
@@ -56,7 +57,7 @@ const string error_text[] = {"your pointer is null", "stack is null", "capacity 
 const static string all_commands[] = {"PUSH", "POP", "ADD", "SUB", "MUL", "QROOT",
                                       "DIV", "PUSHR", "POPR", "OUT", "HLT", "DUMP",
                                       "JMP", "JB", "JE", "JA", "JBE", "JNE", "JAE",
-                                      "UNDEF"};
+                                      "UNDEF", "IN"};
 const static size_t num_of_commands = sizeof(all_commands) / sizeof(string);
 
 bool is_file_exists(const char * file_name);

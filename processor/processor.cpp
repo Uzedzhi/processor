@@ -56,6 +56,16 @@ error_t do_div(proc_t *proc, stack_t *stack, size_t cur_line) {
     return error;
 }
 
+error_t do_in(proc_t *proc, stack_t *stack, size_t num_of_line) {
+    sassert(proc, ERR_PTR_NULL);
+    PROC_ERR_CHECK(proc, num_of_line, 0);
+
+    stack_var_t a = 0;
+    scanf("%lf", &a);
+    stackPush(stack, a);
+    return error;
+}
+
 error_t do_dump(proc_t *proc, size_t num_of_line) {
     sassert(proc, ERR_PTR_NULL);
     
@@ -170,6 +180,7 @@ void do_command(proc_t *proc, size_t *num_of_line) {
         case JNE_CMD:
         case JB_CMD:    do_jb(proc, proc->stack, num_of_line, (int)proc->commands[*num_of_line].value, proc->commands[*num_of_line].num_of_command);         break; 
         case OUT_CMD:   do_out(proc, proc->stack, *num_of_line);                                                                break;
+        case IN_CMD:    do_in(proc, proc->stack, *num_of_line);                                                  break;
         case DUMP_CMD:  do_dump(proc, *num_of_line);                                                         break;
         case HLT_CMD:   procDtor(&proc);                                                                break;
         case UNDEF_CMD: push_error(ERR_UNDEFINED_CMD);                                                      break;
