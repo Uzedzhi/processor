@@ -18,7 +18,7 @@ struct proc_t {
     if (proc->commands[cur_line].num_of_command < 0 || proc->commands[cur_line].num_of_command >= num_of_commands) {\
         add_error(ERR_UNDEFINED_CMD, #cur_line);\
     }\
-    if (get_size(proc->stack) < pops_count || get_size(proc->stack) > 0xfffffff)\
+    if (get_size(proc->stack) < pops_count || get_size(proc->stack) > 0xfffffffff)\
         add_error(ERR_SIZE_INVALID);\
     if (error.is_error == true) {\
         procDump(proc, cur_line);\

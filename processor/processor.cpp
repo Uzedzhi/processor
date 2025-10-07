@@ -80,8 +80,14 @@ error_t do_out(proc_t *proc, stack_t *stack, size_t cur_line) {
 
     stack_var_t a = 0;
     stackPop(stack, &a);
-    stackPush(stack, a);
     printf("==============<%lf>==============\n", a);
+    return error;
+}
+
+error_t do_jmp(proc_t *proc, stack_t *stack, size_t *cur_line, int value) {
+    sassert(proc, ERR_PTR_NULL);
+    PROC_ERR_CHECK(proc, *cur_line, 0);
+    *cur_line = value - 1;
     return error;
 }
 
@@ -92,6 +98,25 @@ error_t do_popr(proc_t *proc, stack_t *stack, size_t cur_line, int num_of_reg) {
     stack_var_t a = 0;
     stackPop(stack, &a);
     proc->regs_values[num_of_reg] = a;
+    return error;
+}
+
+error_t do_jb(proc_t *proc, stack_t *stack, size_t *cur_line, int value, calcInst_t num_of_command) {
+    sassert(proc, ERR_PTR_NULL);
+    PROC_ERR_CHECK(proc, *cur_line, 2);
+
+    stack_var_t a = 0;
+    stack_var_t b = 0;
+    stackPop(stack, &a);
+    stackPop(stack, &b);
+    switch(num_of_command) {
+        case JA_CMD: if (a < b)   *cur_line = value - 1; break;
+        case JB_CMD: if (a > b)   *cur_line = value - 1; break;
+        case JE_CMD: if (a == b)  *cur_line = value - 1; break;
+        case JAE_CMD: if (a <= b) *cur_line = value - 1; break;
+        case JBE_CMD: if (a >= b) *cur_line = value - 1; break;
+        case JNE_CMD: if (a != b) *cur_line = value - 1; break;
+    }
     return error;
 }
 
@@ -124,21 +149,28 @@ error_t do_qroot(proc_t *proc, stack_t *stack, size_t cur_line) {
     return error;
 }
 
-void do_command(proc_t *proc, size_t num_of_line) {
+void do_command(proc_t *proc, size_t *num_of_line) {
     sassert(proc->stack, ERR_PTR_NULL);
     
-    switch(proc->commands[num_of_line].num_of_command) {
-        case PUSH_CMD:  do_push(proc, proc->stack, num_of_line, proc->commands[num_of_line].value);                            break;
-        case POP_CMD:   do_pop(proc, proc->stack, num_of_line);                                                                break;
-        case ADD_CMD:   do_add(proc, proc->stack, num_of_line);                                                                break;
-        case SUB_CMD:   do_sub(proc, proc->stack, num_of_line);                                                                break;
-        case DIV_CMD:   do_div(proc, proc->stack, num_of_line);                                                                break;
-        case MUL_CMD:   do_mul(proc, proc->stack, num_of_line);                                                                break;
-        case QROOT_CMD: do_qroot(proc, proc->stack, num_of_line);                                                              break;
-        case PUSHR_CMD: do_pushr(proc, proc->stack, num_of_line, (int)proc->commands[num_of_line].value);   break;
-        case POPR_CMD:  do_popr(proc, proc->stack, num_of_line, (int)proc->commands[num_of_line].value);    break;
-        case OUT_CMD:   do_out(proc, proc->stack, num_of_line);                                                                break;
-        case DUMP_CMD:  do_dump(proc, num_of_line);                                                         break;
+    switch(proc->commands[*num_of_line].num_of_command) {
+        case PUSH_CMD:  do_push(proc, proc->stack, *num_of_line, proc->commands[*num_of_line].value);                            break;
+        case POP_CMD:   do_pop(proc, proc->stack, *num_of_line);                                                                break;
+        case ADD_CMD:   do_add(proc, proc->stack, *num_of_line);                                                                break;
+        case SUB_CMD:   do_sub(proc, proc->stack, *num_of_line);                                                                break;
+        case DIV_CMD:   do_div(proc, proc->stack, *num_of_line);                                                                break;
+        case MUL_CMD:   do_mul(proc, proc->stack, *num_of_line);                                                                break;
+        case QROOT_CMD: do_qroot(proc, proc->stack, *num_of_line);                                                              break;
+        case JMP_CMD:   do_jmp(proc, proc->stack, num_of_line, (int)proc->commands[*num_of_line].value);                                                                 break;
+        case PUSHR_CMD: do_pushr(proc, proc->stack, *num_of_line, (int)proc->commands[*num_of_line].value);   break;
+        case POPR_CMD:  do_popr(proc, proc->stack, *num_of_line, (int)proc->commands[*num_of_line].value);    break;
+        case JE_CMD:
+        case JA_CMD:
+        case JAE_CMD:
+        case JBE_CMD:
+        case JNE_CMD:
+        case JB_CMD:    do_jb(proc, proc->stack, num_of_line, (int)proc->commands[*num_of_line].value, proc->commands[*num_of_line].num_of_command);         break; 
+        case OUT_CMD:   do_out(proc, proc->stack, *num_of_line);                                                                break;
+        case DUMP_CMD:  do_dump(proc, *num_of_line);                                                         break;
         case HLT_CMD:   procDtor(&proc);                                                                break;
         case UNDEF_CMD: push_error(ERR_UNDEFINED_CMD);                                                      break;
         default:        push_error(ERR_UNDEFINED_CMD);                                                      break;
@@ -155,7 +187,7 @@ error_t execute_file(proc_t *proc) {
         if (proc->commands[count].num_of_command == HLT_CMD) {
             break;
         }
-        do_command(proc, count);
+        do_command(proc, &count);
         count++;
     }
     return error;
@@ -165,15 +197,13 @@ void print_commands(proc_t *proc, size_t num_of_line) {
     for (size_t i = 0; i < num_of_line; i++) {
         if (i % 10 == 0)
             putchar('\n');
-        else
-            printf("[%02X] ", proc->commands[i].num_of_command);
+        printf("[%02X] ", proc->commands[i].num_of_command);
     }
     printf(RED "[%02X] " WHITE, proc->commands[num_of_line].num_of_command);
     for (size_t i = num_of_line + 1; i < proc->num_of_lines; i++) {
         if (i % 10 == 0)
             putchar('\n');
-        else
-            printf("[%02X] ", proc->commands[i].num_of_command);
+        printf("[%02X] ", proc->commands[i].num_of_command);
     }
 }
 
