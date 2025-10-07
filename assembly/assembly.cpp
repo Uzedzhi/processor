@@ -19,10 +19,21 @@ calcInst_t get_num_of_command(const char * command) {
 }
 
 asmArg_t get_type_of_arg(calcInst_t num_of_command) {
-    if (num_of_command == PUSH_CMD)  return ONE_ARG_CMD;
-    if (num_of_command == PUSHR_CMD) return ONE_ARG_CMD;
-    if (num_of_command == POPR_CMD)  return ONE_ARG_CMD;
-    return ZERO_ARG_CMD;
+    switch(num_of_command) {
+        case PUSH_CMD:
+        case JMP_CMD:
+        case JB_CMD:    
+        case JE_CMD:
+        case JAE_CMD:
+        case JNE_CMD:
+        case JBE_CMD:
+        case JA_CMD:
+            return ONE_ARG_CMD;
+        case PUSHR_CMD:
+        case POPR_CMD:
+            return REG_CMD;
+        default:        return ZERO_ARG_CMD;
+    }
 }
 
 regs_enum get_reg_type(char * token_buffer) {
@@ -109,6 +120,6 @@ int main(int argc, char * argv[]) {
             print_error(error, error_text);
             return error.code;
         }
-    printf(GREEN "file was successfully compiled" WHITE);
+    printf(GREEN "file was successfully compiled\n" WHITE);
     return 0;
 }
