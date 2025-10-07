@@ -5,7 +5,7 @@
 #include "../helpers/helpers.h"
 #include "../usefullibs/error_manage.h"
 
-// todo do smth about this pile of funcs
+// todo do smth about this pile of funcs or not
 error_t do_push(proc_t *proc, stack_t *stack, size_t cur_line, stack_var_t value) {
     sassert(stack, ERR_PTR_NULL);
 
