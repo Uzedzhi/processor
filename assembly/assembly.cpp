@@ -2,16 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../usefullibs/error_manage.h"
-#include "../usefullibs/sassert.h"
+#include "error_manage.h"
+#include "sassert.h"
 #include "assembly.h"
 #include "../helpers/helpers.h"
 
 calcInst_t get_num_of_command(const char * command) {
     sassert(command, ERR_PTR_NULL);
 
-    for (size_t i = 0; i < sizeof(all_commands) / sizeof(string); i++) {
-        if (strcmp(command, all_commands[i]) == 0) {
+    for (size_t i = 0; i < sizeof(all_commands_text) / sizeof(string); i++) {
+        if (strcmp(command, all_commands_text[i]) == 0) {
             return (calcInst_t) i;
         }
     }
@@ -20,26 +20,28 @@ calcInst_t get_num_of_command(const char * command) {
 
 asmArg_t get_type_of_arg(calcInst_t num_of_command) {
     switch(num_of_command) {
-        case PUSH_CMD:
-        case JMP_CMD:
-        case JB_CMD:    
-        case JE_CMD:
-        case JAE_CMD:
-        case JNE_CMD:
-        case JBE_CMD:
-        case JA_CMD:
+        case PUSH:
+        case POW:
+        case JMP:
+        case JB:    
+        case JE:
+        case JAE:
+        case JNE:
+        case JBE:
+        case JA:
             return ONE_ARG_CMD;
-        case PUSHR_CMD:
-        case POPR_CMD:
+        case PUSHR:
+        case POPR:
             return REG_CMD;
-        default:        return ZERO_ARG_CMD;
+        default:
+            return ZERO_ARG_CMD;
     }
 }
 
 regs_enum get_reg_type(char * token_buffer) {
     sassert(token_buffer, ERR_PTR_NULL);
 
-    for (size_t i = 0; i < sizeof(all_commands) / sizeof(string); i++) {
+    for (size_t i = 0; i < sizeof(all_commands_text) / sizeof(string); i++) {
         if (strcmp(token_buffer, all_regs_str[i]) == 0) {
             return (regs_enum) i;
         }
@@ -52,16 +54,24 @@ void place_command_argument(char **token_buffer, line_format *cur_line, asmArg_t
     sassert(*token_buffer, ERR_PTR_NULL);
     sassert(cur_line,      ERR_PTR_NULL);
 
-    if (how_many_args == ONE_ARG_CMD) {
-        *token_buffer   = strtok(NULL, " \t\n\r");
-        cur_line->value = atof(*token_buffer);
-    } 
-    else if (how_many_args == REG_CMD) {
-        *token_buffer   = strtok(NULL, " \t\n\r");
-        cur_line->value = (stack_var_t) get_reg_type(*token_buffer);
+    switch(how_many_args) {
+        case ONE_ARG_CMD:
+            *token_buffer   = strtok(NULL, " \t\n\r");
+            cur_line->value = atof(*token_buffer);
+            break;
+        case REG_CMD:
+            *token_buffer   = strtok(NULL, " \t\n\r");
+            cur_line->value = (stack_var_t) get_reg_type(*token_buffer);
+            break;
+        case ZERO_ARG_CMD:
+            cur_line->value = 0;
+            break;
     }
-    else if (how_many_args == ZERO_ARG_CMD)
-        cur_line->value = 0;
+}
+
+void write_header(FILE *compiled_file) {
+    header_t header = {SIGN, VERSION};
+    fwrite(&header, sizeof(header_t), 1, compiled_file);
 }
 
 error_t compile_file(char * user_file_compile, char * user_file_where) {
@@ -79,6 +89,7 @@ error_t compile_file(char * user_file_compile, char * user_file_where) {
     char * compile_buffer = get_buffer_from_file(user_file_compile);
     char * token_buffer   = strtok(compile_buffer, " \t\n\r");
     line_format cur_line  = {};
+    write_header(compiled_file);
 
     while (token_buffer != NULL) {
         cur_line.num_of_command = get_num_of_command(token_buffer);
@@ -113,8 +124,10 @@ int main(int argc, char * argv[]) {
     else if (argc == 3) {
         compile_file(argv[1], argv[2]);
     }
-    else 
+    else {
         print_help();
+        return 0;
+    }
 
     if (error.is_error == true) {
             print_error(error, error_text);

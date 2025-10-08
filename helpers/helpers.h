@@ -1,9 +1,16 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+
+#ifndef LEVEL_OF_CHECK
+#define LEVEL_OF_CHECK 3
+#endif // level_of_check
+
 typedef const char * const string;
 typedef double stack_var_t;
-const size_t num_of_regs = 8;
+const size_t num_of_regs = 9;
+const double VERSION = 1.0;
+const size_t SIGN = 0xB333DEDDALL + 0xC0CAC0LL;
 
 enum asmErr_t {
     ERR_PTR_NULL                = 0,
@@ -18,47 +25,76 @@ enum asmErr_t {
     ERR_HASH_CHANGED            = 9,
     ERR_UNDEFINED_CMD           = 10,
     ERR_FILE_DOES_NOT_EXIST     = 11,
-    FATAL_ERROR                 = 12,
-    NO_ERROR                    = 13
+    ERR_FILE_SIZE_INCORRECT     = 12,
+    ERR_INCORRECT_SIGN          = 13,
+    ERR_INCORRECT_VERSION       = 14,
+    FATAL_ERROR                 = 15,
+    NO_ERROR                    = 16
 };
 
+#define CALC_INSTRUCTIONS(n) \
+    n(PUSH, 0)      \
+    n(POP, 1)       \
+                    \
+    n(ADD, 2)       \
+    n(SUB, 3)       \
+    n(MUL, 4)       \
+    n(QROOT, 5)     \
+    n(DIV, 6)       \
+    n(POW, 7)       \
+                    \
+    n(PUSHR, 8)     \
+    n(POPR, 9)      \
+                    \
+    n(IN, 10)       \
+    n(DUMP, 11)     \
+    n(OUT, 12)      \
+    n(HLT, 13)      \
+                    \
+    n(JMP, 14)      \
+    n(JB, 15)       \
+    n(JE, 16)       \
+    n(JA, 17)       \
+    n(JBE, 18)      \
+    n(JNE, 19)      \
+    n(JAE, 20)      \
+                    \
+    n(UNDEF_CMD, 21)
+
+#define CALC_REGS(n)    \
+    n(RAX, 0)           \
+    n(RBX, 1)           \
+    n(RCX, 2)           \
+    n(RDX, 3)           \
+    n(REX, 4)           \
+    n(TRX, 5)           \
+    n(LLMV, 6)          \
+    n(DED, 7)           \
+    n(UNDEF_REG, 8)
+
+#define INIT_ENUM_VAL(command, value) \
+    command = value,
+#define INIT_STR_ARRAY(command, value) \
+    #command,
 enum calcInst_t {
-    PUSH_CMD  =       0,
-    POP_CMD   =       1,
-    ADD_CMD   =       2,
-    SUB_CMD   =       3,
-    MUL_CMD   =       4,
-    QROOT_CMD =       5,
-    DIV_CMD   =       6,
-    PUSHR_CMD =       7,
-    POPR_CMD  =       8,
-    OUT_CMD   =       9,
-    HLT_CMD   =       10,
-    DUMP_CMD  =       11,
-    JMP_CMD   =       12,
-    JB_CMD    =       13,
-    JE_CMD    =       14,
-    JA_CMD    =       15,
-    JBE_CMD   =       16,
-    JNE_CMD   =       17,
-    JAE_CMD   =       18,
-    UNDEF_CMD =       19,
-    IN_CMD    =       20,
+    CALC_INSTRUCTIONS(INIT_ENUM_VAL)
 };
-
+enum regs_enum {
+    CALC_REGS(INIT_ENUM_VAL)
+};
 struct line_format {
     calcInst_t num_of_command;
     stack_var_t value;
 };
+struct header_t {
+    size_t signature;
+    double version;
+};
 
-string all_regs_str[8] = {"RAX", "RBX", "RCX", "RDX", "REX", "RTX", "LLMV", "DED"};
-const string error_text[] = {"your pointer is null", "stack is null", "capacity is invalid number", "size is invalid number", "type of your argument is different from initialized", "something changed region to the left of an array", "something changed region to the right of an array", "some number overflew past limit", "buffer size should be more than 0!", "hash of your function unexpectedly changed, maybe you swapped or edited elements by yourself?", "command is undefined", "file does not exist", "fatal error, cant progress", "no error"};
-
-const static string all_commands[] = {"PUSH", "POP", "ADD", "SUB", "MUL", "QROOT",
-                                      "DIV", "PUSHR", "POPR", "OUT", "HLT", "DUMP",
-                                      "JMP", "JB", "JE", "JA", "JBE", "JNE", "JAE",
-                                      "UNDEF", "IN"};
-const static size_t num_of_commands = sizeof(all_commands) / sizeof(string);
+string all_regs_str[num_of_regs] = {CALC_REGS(INIT_STR_ARRAY)};
+const string error_text[] = {"your pointer is null", "stack is null", "capacity is invalid number", "size is invalid number", "type of your argument is different from initialized", "something changed region to the left of an array", "something changed region to the right of an array", "some number overflew past limit", "buffer size should be more than 0!", "hash of your function unexpectedly changed, maybe you swapped or edited elements by yourself?", "command is undefined", "file does not exist", "size is invalid", "signature is incorrect COPYRIGHT!!1!1", "Version is imcompatible", "fatal error, cant progress", "no error"};
+const string all_commands_text[] = {CALC_INSTRUCTIONS(INIT_STR_ARRAY)};
+const static size_t num_of_commands = sizeof(all_commands_text) / sizeof(string);
 
 bool is_file_exists(const char * file_name);
 void nullify_anything_extra(char * buffer, size_t file_size, size_t actually_read);

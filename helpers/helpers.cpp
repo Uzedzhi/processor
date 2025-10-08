@@ -1,6 +1,6 @@
 #include "../stack/stack.h"
 #include "helpers.h"
-#include "../usefullibs/error_manage.h"
+#include "error_manage.h"
 
 bool is_file_exists(const char * file_name) {
     sassert(file_name, ERR_PTR_NULL);
@@ -54,10 +54,9 @@ size_t get_file_size(FILE * fp) {
 
 bool is_in_array(const char * command, size_t size) {
     sassert(command,      ERR_PTR_NULL);
-    sassert(all_commands, ERR_PTR_NULL);
 
     for (size_t i = 0; i < size; i++) {
-        if (strcmp(command, all_commands[i]) == 0)
+        if (strcmp(command, all_commands_text[i]) == 0)
             return true;
     }
 

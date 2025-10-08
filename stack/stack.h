@@ -7,12 +7,8 @@
 #include <limits.h>
 #include <math.h>
 
-#include "../usefullibs/sassert.h"
+#include "sassert.h"
 #include "../helpers/helpers.h"
-
-#ifndef LEVEL_OF_CHECK
-#define LEVEL_OF_CHECK 3
-#endif // level_of_check
 
 #define push_error(ERROR_CODE, ...) \
     sassert(0, ERROR_CODE, ##__VA_ARGS__);
@@ -80,7 +76,8 @@ string bad = "MEOW!!!";
 #define check_if_canareika_correct(stack) ;
 #define print_canareika(stack, errors) ;
 #define print_right_canareika(stack, errors) ;
-#define print_canareika_bytes(stack, LEFT_canareika_location, RIGHT_canareika_location) ;
+#define print_canareika_bytes(stack) ;
+#define print_left_canareika(stack, errors) ;
 #endif // print_canareika_bytes
 
 

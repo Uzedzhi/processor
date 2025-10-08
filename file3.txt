@@ -1,0 +1,8 @@
+IN
+POPR RAX
+
+PUSHR RAX
+POW 2
+
+OUT
+HLT
