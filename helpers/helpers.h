@@ -1,16 +1,31 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#include "error_manage.h"
+
+#define DEBUG_FILE_NAME "debug_file.txt"
 
 #ifndef LEVEL_OF_CHECK
-#define LEVEL_OF_CHECK 3
+#define LEVEL_OF_CHECK 0
 #endif // level_of_check
 
 typedef const char * const string;
 typedef double stack_var_t;
-const size_t num_of_regs = 9;
-const double VERSION = 1.0;
-const size_t SIGN = 0xB333DEDDALL + 0xC0CAC0LL;
+const size_t MAX_ARR_SIZE   = 500;
+const size_t MAX_STR_SIZE   = 300;
+const size_t MAX_SIZE       = 200;
+const size_t num_of_regs    = 9;
+const size_t num_of_labels  = 500;
+const double VERSION        = 1.0;
+const size_t RAM_SIZE       = 100;
+const size_t LABEL_SIZE     = 100;
+const size_t SIGN           = 0xB333DEDDAL + 0xC0CAC0LU;
+const size_t otstyp         = 10;
+const size_t VIEW_OF_CMD    = 4;
+const size_t MAX_MIN        = 100;
+const size_t X_RES          = 5;
+const size_t Y_RES          = 2;
+const size_t START_VAL      = 5;
 
 enum asmErr_t {
     ERR_PTR_NULL                = 0,
@@ -29,7 +44,12 @@ enum asmErr_t {
     ERR_INCORRECT_SIGN          = 13,
     ERR_INCORRECT_VERSION       = 14,
     FATAL_ERROR                 = 15,
-    NO_ERROR                    = 16
+    NO_ERROR                    = 16,
+    ERR_INCORRECT_ARGUMENT      = 17,
+    ERR_INCORRECT_LABEL         = 18,
+    ERR_CONFLICTING_TYPES       = 19,
+    ERR_SYSTEM_FAILED           = 20,
+    ERR_VIDEO_DIVIDE_FAIL       = 21
 };
 
 #define CALC_INSTRUCTIONS(n) \
@@ -59,7 +79,19 @@ enum asmErr_t {
     n(JNE, 19)      \
     n(JAE, 20)      \
                     \
-    n(UNDEF_CMD, 21)
+    n(UNDEF_CMD, 21)\
+    n(DET, 22)      \
+    n(ROOT, 23)     \
+                    \
+    n(CALL, 24)     \
+    n(RET, 25)      \
+                    \
+    n(POPM, 26)     \
+    n(PUSHM, 27)    \
+                    \
+    n(DRAW, 28)     \
+    n(MOD, 29)      \
+    n(TOINT, 30)
 
 #define CALC_REGS(n)    \
     n(RAX, 0)           \
@@ -67,8 +99,8 @@ enum asmErr_t {
     n(RCX, 2)           \
     n(RDX, 3)           \
     n(REX, 4)           \
-    n(TRX, 5)           \
-    n(LLMV, 6)          \
+    n(RTX, 5)           \
+    n(TRX, 6)           \
     n(DED, 7)           \
     n(UNDEF_REG, 8)
 
@@ -82,25 +114,60 @@ enum calcInst_t {
 enum regs_enum {
     CALC_REGS(INIT_ENUM_VAL)
 };
+enum compile_type {
+    NORMAL_COMPILING = 'N', VIDEO_COMPILING = 'V'
+};
+enum asmArg_t {
+    ZERO_ARG_CMD, REG_CMD, ONE_ARG_CMD, LABEL_ARG_CMD, MEMORY_ARG_CMD
+};
+
 struct line_format {
     calcInst_t num_of_command;
     stack_var_t value;
+    asmArg_t type_of_arg;
 };
+
+struct label {
+    unsigned long label_hash;
+    size_t label_num_of_line;
+};
+
+struct dimensions {
+    size_t width;
+    size_t height;
+};
+
+
 struct header_t {
     size_t signature;
     double version;
 };
+struct extra_info {
+    size_t sign;
+    size_t num_of_lines;
+};
 
 string all_regs_str[num_of_regs] = {CALC_REGS(INIT_STR_ARRAY)};
-const string error_text[] = {"your pointer is null", "stack is null", "capacity is invalid number", "size is invalid number", "type of your argument is different from initialized", "something changed region to the left of an array", "something changed region to the right of an array", "some number overflew past limit", "buffer size should be more than 0!", "hash of your function unexpectedly changed, maybe you swapped or edited elements by yourself?", "command is undefined", "file does not exist", "size is invalid", "signature is incorrect COPYRIGHT!!1!1", "Version is imcompatible", "fatal error, cant progress", "no error"};
+const string error_text[] =    {"your pointer is null", "stack is null", "capacity is invalid number", "size is invalid number",
+                                "type of your argument is different from initialized", "something changed region to the left of an array",
+                                "something changed region to the right of an array", "some number overflew past limit", "buffer size should be more than 0!",
+                                "hash of your function unexpectedly changed, maybe you swapped or edited elements by yourself?", "command is undefined",
+                                "file does not exist", "size is invalid", "signature is incorrect COPYRIGHT!!1!1", "Version is imcompatible",
+                                "fatal error, cant progress", "no error", "argument to a command is incorrect", "label is incorrect", 
+                                "type of your argument is incorrect", "you entered incorrect command, try again", "video division into frames is unsuccessful"};
 const string all_commands_text[] = {CALC_INSTRUCTIONS(INIT_STR_ARRAY)};
 const static size_t num_of_commands = sizeof(all_commands_text) / sizeof(string);
-
+string hashes_file_name = "assembly/hashed_commands.bin";
 bool is_file_exists(const char * file_name);
 void nullify_anything_extra(char * buffer, size_t file_size, size_t actually_read);
-char * get_buffer_from_file(char * user_file_compile);
+char * get_buffer_from_file(FILE * fp, size_t file_size);
 bool is_in_array(const char * command, size_t size);
 size_t get_file_size(FILE * fp);
 bool is_same(double a, double b);
+asmArg_t get_type_of_arg(int num_of_command);
+void *reallocate_array(void ** array, size_t capacity, size_t new_bytes);
+
+int max(int a, int b);
+int min(int a, int b);
 
 #endif // helpers_h

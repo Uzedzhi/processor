@@ -5,23 +5,24 @@
 #include <cstdint>
 
 #include "stack.h"
+#include "../helpers/helpers.h"
 
 static int count = 1;
-static string format_string = "\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/";
 
 const static size_t POWER = 1007;
-const static size_t MOD = 0xEDADEDAEDA;
 const static size_t POISON = 0x2134256754321123;
 const static size_t MAX_CAPACITY = 0xffffff;
-const static size_t MAX_SIZE = 200;
 const static size_t MAX_PRINT_ROWS = 5;
 const static size_t strlen_format_string = strlen(format_string);
 const static size_t num_of_errors = sizeof(err_strings) / sizeof(err_strings[0]);
 
 struct stack_t {
-    const char * func_name;
-    const char * file_name;
-    const char * var_name;
+    #if LEVEL_OF_CHECK > 0
+        const char * func_name;
+        const char * file_name;
+        const char * var_name;
+        size_t hash;
+    #endif
     size_t line;
     stack_var_t * stack;
     stack_var_t * raw;
@@ -29,7 +30,6 @@ struct stack_t {
     size_t var_size;
     size_t size;
     size_t capacity;
-    size_t hash;
 };
 
 // function bodies
@@ -45,9 +45,11 @@ stack_t * create_stack(string var_name, size_t buffer_size,
     stack_t *stk = (stack_t *) calloc(1, sizeof(stack_t));
     sassert(stk != NULL, ERR_PTR_NULL);
 
-    stk->func_name = func_name;
-    stk->file_name = file_name;
-    stk->var_name  = var_name;
+    #if LEVEL_OF_CHECK > 1
+        stk->func_name = func_name;
+        stk->file_name = file_name;
+        stk->var_name  = var_name;
+    #endif
     stk->line      = line;
     stk->capacity  = buffer_size;
     stk->size      = 0;
@@ -63,8 +65,14 @@ stack_t * create_stack(string var_name, size_t buffer_size,
     *stk->raw  = (stack_var_t) CANAREIKA;
     stk->stack[stk->capacity] = (stack_var_t) CANAREIKA;
 
-    stk->hash  = get_stack_hash(*stk);
+    #if LEVEL_OF_CHECK > 1
+        stk->hash  = get_stack_hash(*stk);
+    #endif
     return stk;
+}
+
+stack_var_t get_top(stack_t *stack) {
+    return stack->stack[stack->size - 1];
 }
 
 size_t get_size(stack_t *stack) {
@@ -78,7 +86,6 @@ bool check_if_overflow(size_t first, size_t second) {
 void print_whole_var_info(stack_t *stack) {
     sassert(stack, ERR_PTR_NULL);
 
-    size_t otstyp = strlen_format_string / 2;
     print_part_of_var_info(stack, 0, stack->size, 1);
     if (stack->capacity - stack->size > MAX_PRINT_ROWS) {                                                                                                                       \
         print_part_of_var_info(stack, stack->size, stack->size + MAX_PRINT_ROWS, 0);
@@ -92,10 +99,9 @@ void print_whole_var_info(stack_t *stack) {
 void print_part_of_var_info(stack_t *stack, size_t start, size_t end, size_t is_occupied) {
     sassert(stack, ERR_PTR_NULL);
 
-    size_t otstyp = strlen_format_string / 2;
     char occupied_symbol = (is_occupied) ? '*' : ' ';
     for (size_t i = start; i < end; i++) {
-        print_with_otstyp(otstyp, "    %c[%zu] = %lf", occupied_symbol, i, stack->stack[i]);
+        print_with_otstyp(otstyp, "    %c[%zu] = %lf", occupied_symbol, i, (double) stack->stack[i]);
         for (size_t j = 0; j < stack->var_size; j++) {
             printf(" [%02X]", *((unsigned char *)(stack->stack + i) + j));
         }
@@ -132,12 +138,29 @@ bool is_error_active(int errors, asmErr_t error) {
     return (errors & (1 << error)) == 1 << error;
 }
 
-void stackDump(stack_t *stack, int is_end, int errors, const char * file_name, const char * func_name, size_t line) {
+int stackDump(stack_t *stack, int is_end, int print_raw, int errors, const char * file_name, const char * func_name, size_t line) {
     sassert(stack,     ERR_PTR_NULL);
     sassert(file_name, ERR_PTR_NULL);
     sassert(func_name, ERR_PTR_NULL);
     sassert(is_error_active(errors, ERR_PTR_NULL) == 0, ERR_PTR_NULL);
-    size_t otstyp = strlen_format_string / 2;
+    if (print_raw == true) {
+        for (size_t i = 0; i < stack->capacity; i++) {
+            stack_var_t value = stack->stack[i];
+            if (i % 10 == 0) {
+                printf("\n");
+                print_with_otstyp(otstyp, "    ");
+            }
+            if (i == stack->size - 1)
+                printf(GREEN);
+            if (is_same(stack->stack[i], POISON))
+                printf("[PSN] ");
+            else
+                 printf("[%-3d] ", (int)stack->stack[i]);
+            printf(WHITE);
+        }
+        printf("\n");
+        return 0;
+    }
 
     printf(RED "%sSTART DUMP%s" WHITE " (count=%d)\n", format_string, format_string, count++);
     print_with_otstyp(otstyp, "reasons : "); print_all_reasons(errors);
@@ -172,6 +195,7 @@ void stackDump(stack_t *stack, int is_end, int errors, const char * file_name, c
 
     if (is_end)
         printf(RED "\n%sENDING DUMP%s\n\n" WHITE, format_string, format_string);
+    return 0;
 }
 
 void reallocate_stack(stack_t *stack, double multiplier) {
@@ -206,33 +230,44 @@ void print_all_reasons(int errors) {
 
 int stackPush_internal(stack_t *stack, stack_var_t value, const char * file_name, const char * func_name, size_t line) {
     sassert(stack,     ERR_PTR_NULL);
-    sassert(file_name, ERR_PTR_NULL);
-    sassert(func_name, ERR_PTR_NULL);
-    STACK_ERR_CHECK(stack, 0, file_name, func_name, line);
+
+    #if LEVEL_OF_CHECK > 1
+        sassert(file_name, ERR_PTR_NULL);
+        sassert(func_name, ERR_PTR_NULL);
+        STACK_ERR_CHECK(stack, 0, file_name, func_name, line);
+    #endif
 
     if (stack->size >= stack->capacity) {
         reallocate_stack(stack, 2);
     }
     
     stack->stack[stack->size++] = value;
-    stack->hash = get_stack_hash(*stack);
 
-    STACK_ERR_CHECK(stack, 0, file_name, func_name, line);
+    #if LEVEL_OF_CHECK > 1
+        stack->hash = get_stack_hash(*stack);
+        STACK_ERR_CHECK(stack, 0, file_name, func_name, line);
+    #endif
+
     return 0;
 }
 
 int stackPop_internal(stack_t *stack, stack_var_t * value, const char * file_name, const char * func_name, size_t line) {
     sassert(stack,     ERR_PTR_NULL);
     sassert(value,     ERR_PTR_NULL);
-    sassert(file_name, ERR_PTR_NULL);
-    sassert(func_name, ERR_PTR_NULL);
-    STACK_ERR_CHECK(stack, 1, file_name, func_name, line);
+
+    #if LEVEL_OF_CHECK > 1
+        sassert(file_name, ERR_PTR_NULL);
+        sassert(func_name, ERR_PTR_NULL);
+        STACK_ERR_CHECK(stack, 1, file_name, func_name, line);
+    #endif
 
     *value =  stack->stack[--stack->size];
     stack->stack[stack->size] = (stack_var_t) POISON;
-    stack->hash = get_stack_hash(*stack);
 
-    STACK_ERR_CHECK(stack, 0, file_name, func_name, line);
+    #if LEVEL_OF_CHECK > 1
+        stack->hash = get_stack_hash(*stack);
+        STACK_ERR_CHECK(stack, 0, file_name, func_name, line);
+    #endif
     return 0;
 }
 
@@ -256,21 +291,12 @@ size_t get_stack_hash(stack_t stack) {
     return hash;
 }
 
-asmErr_t stackDtor_internal(stack_t *stack) {
-    sassert(stack, ERR_PTR_NULL);
-    sassert(get_stack_hash(*stack) == stack->hash, ERR_HASH_CHANGED);
-
-    free(stack->raw);
-    stack->raw = NULL;
-    stack->stack = NULL;
-
-    return NO_ERROR;
-}
-
-asmErr_t stackDtor2_internal(stack_t **stack) {
-    free(*stack);
-    *stack = NULL;
-    return NO_ERROR;
+void stackDtor(stack_t *stack) {
+    if (stack != NULL) {
+        if (stack->raw != NULL)
+            free(stack->raw);
+        free(stack);
+    }
 }
 
 int stackErrcheck(stack_t *stack, bool is_pt) {
@@ -281,7 +307,6 @@ int stackErrcheck(stack_t *stack, bool is_pt) {
         break;
     }
 
-    check_if_hash_correct(stack);
     check_if_canareika_correct(stack);
     
     if (stack->capacity > MAX_CAPACITY)
