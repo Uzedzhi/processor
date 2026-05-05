@@ -1,31 +1,36 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "error_manage.h"
 
 #define DEBUG_FILE_NAME "debug_file.txt"
 
 #ifndef LEVEL_OF_CHECK
-#define LEVEL_OF_CHECK 0
+#define LEVEL_OF_CHECK 3
 #endif // level_of_check
 
 typedef const char * const string;
 typedef double stack_var_t;
-const size_t MAX_ARR_SIZE   = 500;
-const size_t MAX_STR_SIZE   = 300;
-const size_t MAX_SIZE       = 200;
-const size_t num_of_regs    = 9;
-const size_t num_of_labels  = 500;
-const double VERSION        = 1.0;
-const size_t RAM_SIZE       = 100;
-const size_t LABEL_SIZE     = 100;
-const size_t SIGN           = 0xB333DEDDAL + 0xC0CAC0LU;
-const size_t otstyp         = 10;
-const size_t VIEW_OF_CMD    = 4;
-const size_t MAX_MIN        = 100;
-const size_t X_RES          = 5;
-const size_t Y_RES          = 2;
-const size_t START_VAL      = 5;
+const size_t CMD_RANGE          = 10;
+const size_t MAX_ARR_SIZE       = 500;
+const size_t MAX_STR_SIZE       = 300;
+const size_t MAX_SIZE           = 200;
+const size_t num_of_regs        = 9;
+const size_t num_of_labels      = 500;
+const double VERSION            = 1.0;
+const size_t RAM_SIZE           = 100;
+const size_t LABEL_SIZE         = 100;
+const size_t SIGN               = 0xB333DEDDAL + 0xC0CAC0LU;
+const size_t otstyp             = 10;
+const size_t VIEW_OF_CMD        = 4;
+const size_t MAX_MIN            = 100;
+const size_t MAX_TRAILING_NUM   = 100;
+const size_t X_RES              = 5;
+const size_t Y_RES              = 2;
+const size_t START_VAL          = 15;
+const string VIDEO_HEADER_STR   = "; assembly for video by dimooooon";
 
 enum asmErr_t {
     ERR_PTR_NULL                = 0,
@@ -49,7 +54,8 @@ enum asmErr_t {
     ERR_INCORRECT_LABEL         = 18,
     ERR_CONFLICTING_TYPES       = 19,
     ERR_SYSTEM_FAILED           = 20,
-    ERR_VIDEO_DIVIDE_FAIL       = 21
+    ERR_VIDEO_DIVIDE_FAIL       = 21,
+    ERR_INCORRECT_VIDEO_HEADER  = 22
 };
 
 #define CALC_INSTRUCTIONS(n) \
@@ -91,7 +97,9 @@ enum asmErr_t {
                     \
     n(DRAW, 28)     \
     n(MOD, 29)      \
-    n(TOINT, 30)
+    n(TOINT, 30)    \
+    n(PUSHMN, 31)   \
+    n(POPMN,  32)   \
 
 #define CALC_REGS(n)    \
     n(RAX, 0)           \
@@ -123,8 +131,18 @@ enum asmArg_t {
 
 struct line_format {
     calcInst_t num_of_command;
-    stack_var_t value;
+    stack_var_t cmd_arg;
     asmArg_t type_of_arg;
+};
+
+struct VID {
+    bool is_video;
+    bool has_audio;
+    size_t width;
+    size_t height;
+    char audio_file_name[MAX_STR_SIZE];
+    size_t fps;
+
 };
 
 struct label {
@@ -137,6 +155,11 @@ struct dimensions {
     size_t height;
 };
 
+struct RAM {
+    double *procRAM;
+    size_t capacity;
+    size_t size;
+};
 
 struct header_t {
     size_t signature;
@@ -154,10 +177,12 @@ const string error_text[] =    {"your pointer is null", "stack is null", "capaci
                                 "hash of your function unexpectedly changed, maybe you swapped or edited elements by yourself?", "command is undefined",
                                 "file does not exist", "size is invalid", "signature is incorrect COPYRIGHT!!1!1", "Version is imcompatible",
                                 "fatal error, cant progress", "no error", "argument to a command is incorrect", "label is incorrect", 
-                                "type of your argument is incorrect", "you entered incorrect command, try again", "video division into frames is unsuccessful"};
+                                "type of your argument is incorrect", "you entered incorrect command, try again",
+                                "video division into frames is unsuccessful", "video header is incorrect"};
 const string all_commands_text[] = {CALC_INSTRUCTIONS(INIT_STR_ARRAY)};
 const static size_t num_of_commands = sizeof(all_commands_text) / sizeof(string);
-string hashes_file_name = "assembly/hashed_commands.bin";
+const string all_hashable_text[] = {CALC_INSTRUCTIONS(INIT_STR_ARRAY) CALC_REGS(INIT_STR_ARRAY)};
+string hashes_file_name = "hash/hashed_commands.bin";
 bool is_file_exists(const char * file_name);
 void nullify_anything_extra(char * buffer, size_t file_size, size_t actually_read);
 char * get_buffer_from_file(FILE * fp, size_t file_size);
