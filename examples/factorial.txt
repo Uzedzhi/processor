@@ -1,0 +1,44 @@
+: main {
+    IN
+    POPR RAX
+    
+    PUSHR RAX
+    CALL :factorial
+    
+    OUT
+    HLT
+}
+
+:factorial {
+    POPR RBX
+    
+    PUSH 1
+    PUSHR RBX
+    JE :base_case
+    
+    PUSHR RBX
+    PUSH 1
+    SUB
+    
+    CALL :factorial 
+    
+    PUSHR RBX
+    MUL
+    
+    CALL :increment_RBX
+    RET
+}
+
+:base_case {
+    PUSH 1
+    CALL :increment_RBX
+    RET
+}
+
+:increment_RBX {
+    PUSHR RBX
+    PUSH 1
+    ADD
+    POPR RBX
+    RET
+}

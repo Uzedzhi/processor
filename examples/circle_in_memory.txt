@@ -1,0 +1,159 @@
+; main {
+    IN
+    POPR DED ; rows
+
+    PUSHR DED
+    PUSHR DED
+    MUL
+    PUSH 2
+    MUL
+    POPR TRX
+
+    CALL :initialize
+
+    IN
+    POPR RTX ; radius
+    CALL :make_circle
+    DRAW 0
+    HLT
+}
+
+:initialize {
+    CALL :push_value
+    POPM [RAX]
+
+    CALL :increment_RAX
+
+    PUSHR RAX
+    PUSHR TRX
+    JB :initialize
+    RET
+}
+
+:push_value {
+    PUSH '0'
+    PUSHR RAX
+    PUSH 2
+    MOD
+    PUSH 0
+    JE :place_color
+    RET
+}
+
+:place_color {
+    POP
+    PUSH 0
+    RET
+}
+
+:make_circle {
+    PUSHR DED
+    POPR RAX
+
+    :cycle_rows ; RBX {
+
+        :cycle_cols ; RCX {
+            CALL :push_value_to_circle
+
+            CALL :increment_RCX
+            PUSHR RCX ; cols count
+            PUSHR RAX
+            JB :cycle_cols
+        }
+
+        PUSH 0
+        POPR RCX ; nullify cols
+
+        CALL :increment_RBX
+        PUSHR RBX ; rows count
+        PUSHR RAX
+        JB :cycle_rows
+    }
+
+
+    RET
+}
+
+:push_value_to_circle {
+    CALL :calc_dest ; throws dist in stack
+
+    PUSHR RTX
+    JBE :push_circle
+    CALL :increment_RDX
+    CALL :increment_RDX
+    RET
+
+    :push_circle
+    PUSH '8'
+    PUSH 4
+    POPM [RDX]
+    CALL :increment_RDX
+    POPM [RDX]
+    CALL :increment_RDX
+    RET
+}
+
+:calc_dest {
+    PUSHR RAX
+    PUSH 2
+    DIV
+    TOINT
+    PUSHR RCX
+    SUB
+    POW 2
+
+    PUSHR RAX
+    PUSH 2
+    DIV
+    TOINT
+    PUSHR RBX
+    SUB
+    POW 2
+
+    ADD
+    ROOT
+    RET
+}
+
+
+
+
+:increment_RAX {
+    PUSHR RAX
+    PUSH 1
+    ADD
+    POPR RAX
+    RET
+}
+
+:increment_RBX {
+    PUSHR RBX
+    PUSH 1
+    ADD
+    POPR RBX
+    RET
+}
+
+:increment_RCX {
+    PUSHR RCX
+    PUSH 1
+    ADD
+    POPR RCX
+    RET
+}
+
+:increment_RDX {
+    PUSHR RDX
+    PUSH 1
+    ADD
+    POPR RDX
+    RET
+}
+
+:decrement_RDX {
+    PUSHR RDX
+    PUSH 1
+    SUB
+    POPR RDX
+    RET
+}

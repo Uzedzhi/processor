@@ -1,0 +1,251 @@
+; assembly for video by dimooooon
+
+; main {
+	PUSH 0
+	POPR RAX
+
+	CALL :draw_1
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_2
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_3
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_4
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_5
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_6
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_7
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_8
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_9
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_10
+	PUSH 0
+	POPR RAX
+	
+
+	CALL :draw_11
+	PUSH 0
+	POPR RAX
+	
+
+	HLT
+}
+:inc_rax {
+	PUSHR RAX
+	PUSH 1
+	ADD
+	POPR RAX
+	RET
+}
+
+:draw_1 {
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}
+:draw_2 {
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}
+:draw_3 {
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}
+:draw_4 {
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}
+:draw_5 {
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}
+:draw_6 {
+	PUSH 0
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH ' '
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 0
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH ' '
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}
+:draw_7 {
+	PUSH 0
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH ' '
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 0
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH ' '
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}
+:draw_8 {
+	PUSH 0
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH ' '
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 0
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH ' '
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}
+:draw_9 {
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}
+:draw_10 {
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	PUSH 1
+	POPM [RAX]
+	CALL :inc_rax
+	PUSH '#'
+	POPM [RAX]
+	CALL :inc_rax
+
+	DRAW
+	RET
+}

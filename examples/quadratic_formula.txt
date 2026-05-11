@@ -1,0 +1,93 @@
+IN
+POPR RAX
+IN
+POPR RBX
+IN
+POPR RCX
+
+PUSHR RAX
+PUSHR RBX
+PUSHR RCX
+
+DET
+POPR DED ;determinant
+
+; main
+CALL :check_det
+HLT
+
+
+:check_det
+PUSHR RAX
+PUSH 0
+JE :linear; linear
+
+PUSHR DED
+PUSH 0
+JE :zero_det ; D == 0
+
+PUSHR DED
+PUSH 0
+JA :positive_det; D > 0
+
+PUSHR DED
+PUSH 0
+JB :negative_det ; D < 0
+
+RET
+
+:zero_det
+PUSHR RBX ; D == 0
+PUSH -1
+MUL
+PUSHR DED
+ROOT
+ADD
+PUSH 2
+DIV
+PUSHR RAX
+DIV
+OUT
+RET
+
+:positive_det
+PUSH 2 ; D > 0
+OUT
+PUSHR RBX
+PUSH -1
+MUL
+POPR RBX
+
+PUSHR DED
+ROOT
+POPR DED
+
+PUSH 2
+PUSHR RAX
+MUL
+POPR RAX
+
+PUSHR RBX
+PUSHR DED
+ADD
+PUSHR RAX
+DIV
+OUT
+
+PUSHR RBX
+PUSHR DED
+SUB
+PUSHR RAX
+DIV
+OUT
+RET
+
+:negative_det
+PUSH 0 ; D < 0
+OUT
+RET
+
+:linear
+PUSH -1 ; linear
+OUT
+RET
